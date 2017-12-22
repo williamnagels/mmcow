@@ -19,9 +19,9 @@ add_executable(mmcow_tests
 	src/unittest_main.cpp
 ) 
 
-#add_custom_command(TARGET mmcow_tests
-#                   POST_BUILD
-#                   COMMAND ctest -C $<CONFIGURATION> -VV --output-on-failure)
+add_custom_command(TARGET mmcow_tests
+                   POST_BUILD
+                   COMMAND ctest -C $<CONFIGURATION> -VV --output-on-failure)
 
 target_link_libraries(mmcow_tests ${Boost_LIBRARIES})
 add_test(mmcow mmcow_tests)

@@ -5,28 +5,61 @@ template <typename T>
 struct MM_COW;
 
 template <typename T>
+struct W_Prot;
+
+template <typename T>
+struct WriteProtection
+{
+	W_Prot<T>* _it;
+	WriteProtection(W_Prot<T>* it) :
+		_it(it)
+	{}
+	
+
+	WriteProtection operator=(T const& other)
+	{
+		if (it->cow->_allocated_ptr)
+		{
+			*v = other;
+			return *this;
+		}
+		else
+		{
+			it->cow->allocate(it->cow->_current_size);
+			(*it->cow)[idx] = other;
+		}
+
+		*this = (*it->cow)[idx];
+		return *this;
+	}
+
+	operator T&() const { return *v; }
+};
+
+
+template <typename T>
 struct W_Prot
 {
 	using iterator=W_Prot<T>;
-	using value_type = T;
-	using reference = T & ;
-	using pointer = T * ;
+	using value_type = WriteProtection<T>;
+	using reference = value_type& ;
+	using pointer = value_type* ;
 	using difference_type = std::ptrdiff_t;
-	using iterator_category = std::forward_iterator_tag;
+	using iterator_category = std::bidirectional_iterator_tag;
 
 	MM_COW<T>* cow;
-	T* v;
+	value_type v;
 	std::size_t idx;
+	T* _i;
 	W_Prot(T* i, std::size_t index, MM_COW<T>* coww) :
-		v(i)
-		, cow(coww)
+		cow(coww)
+		, v(this)
 		, idx(index)
-	{
-
-	}
+		, _i(i)
+	{}
 	
 
-	T& operator*() { return *v; }
+
 	bool operator==(iterator const & other)
 	{
 		return idx == other.idx; 
@@ -35,31 +68,21 @@ struct W_Prot
 	{ 
 		return !(*this == other); 
 	}
-	operator T&() const { return *v; }
+
+
 	iterator operator++()
 	{ 
-		return (*cow)[idx + 1]; 
-	}
-
-
-
-	iterator operator=(T const& other)
-	{
-		if (cow->_allocated_ptr)
-		{
-			*v = other;
-			return *this;
-		}
-		else
-		{
-			cow->allocate(cow->_current_size);
-			(*cow)[idx] = other;
-		}
-
-		*this = (*cow)[idx];
-
+		*this = (*cow)[idx+1];
 		return *this;
 	}
+	iterator operator--()
+	{
+		*this = (*cow)[idx-1];
+		return *this;
+	}
+
+	reference operator*() { return v; }
+	operator reference() const { return v; }
 };
 
 template<typename T>
@@ -112,16 +135,3 @@ struct MM_COW
 		_ptr = _allocated_ptr.get();
 	}
 };
-
-/*
-template <typename T>
-typename MM_COW<T>::W_Prot begin(MM_COW<T> const& cow)
-{
-	return cow[0];
-}
-
-template <typename T>
-typename MM_COW<T>::W_Prot end(MM_COW<T> const& cow)
-{
-	return cow[cow._current_size - 1];
-}*/
