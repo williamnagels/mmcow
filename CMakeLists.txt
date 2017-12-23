@@ -13,7 +13,7 @@ find_package(Boost 1.65.0 REQUIRED unit_test_framework date_time filesystem)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS}) 
 
 add_executable(mmcow_tests 
 	src/unittest_main.cpp

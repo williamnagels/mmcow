@@ -1,137 +1,158 @@
 #pragma once
 #include <memory>
 
-template <typename T> 
-struct MM_COW;
-
-template <typename T>
-struct W_Prot;
-
-template <typename T>
-struct WriteProtection
-{
-	W_Prot<T>* _it;
-	WriteProtection(W_Prot<T>* it) :
-		_it(it)
-	{}
-	
-
-	WriteProtection operator=(T const& other)
-	{
-		if (it->cow->_allocated_ptr)
-		{
-			*v = other;
-			return *this;
-		}
-		else
-		{
-			it->cow->allocate(it->cow->_current_size);
-			(*it->cow)[idx] = other;
-		}
-
-		*this = (*it->cow)[idx];
-		return *this;
-	}
-
-	operator T&() const { return *v; }
-};
-
-
-template <typename T>
-struct W_Prot
-{
-	using iterator=W_Prot<T>;
-	using value_type = WriteProtection<T>;
-	using reference = value_type& ;
-	using pointer = value_type* ;
-	using difference_type = std::ptrdiff_t;
-	using iterator_category = std::bidirectional_iterator_tag;
-
-	MM_COW<T>* cow;
-	value_type v;
-	std::size_t idx;
-	T* _i;
-	W_Prot(T* i, std::size_t index, MM_COW<T>* coww) :
-		cow(coww)
-		, v(this)
-		, idx(index)
-		, _i(i)
-	{}
-	
-
-
-	bool operator==(iterator const & other)
-	{
-		return idx == other.idx; 
-	}
-	bool operator!=(iterator const & other)
-	{ 
-		return !(*this == other); 
-	}
-
-
-	iterator operator++()
-	{ 
-		*this = (*cow)[idx+1];
-		return *this;
-	}
-	iterator operator--()
-	{
-		*this = (*cow)[idx-1];
-		return *this;
-	}
-
-	reference operator*() { return v; }
-	operator reference() const { return v; }
-};
-
 template<typename T>
-struct MM_COW
-{
-	using iterator=W_Prot<T>;
-	using difference_type = ptrdiff_t;
-	using size_type=size_t ;
-	using value_type = T;
-	using pointer = T*;
-	using reference = T & ;
+struct Container;
 
+namespace
+{
+template <typename T>
+class WrappedValue
+{
+	T* _value;
+public:
+	WrappedValue(T* value) :
+		_value(value) {}
+	operator T const&() const { return *_value; }
+	WrappedValue& operator=(T const& value)
+	{ 
+		*_value = value; 
+		return*this;
+	}
+};
+
+template <typename T>
+class Iterator
+{
+	Container<T>* _container;
+	WrappedValue<T> _wrapped_value;
+	std::size_t _index;
+
+public:
+	using iterator_category = std::bidirectional_iterator_tag;
+	using difference_type = typename Container<T>::difference_type;
+	using size_type = typename Container<T>::size_type;
+	using value_type = typename Container<T>::value_type;
+	using pointer = typename Container<T>::pointer;
+	using reference = typename Container<T>::reference;
+	using iterator = typename Container<T>::iterator;
+
+	Iterator(Container<T>* container, T* value, std::size_t index):
+		_container(container)
+		, _wrapped_value(value)
+		, _index(index)
+	{
+
+	}
+
+	typename Container<T>::iterator& operator=(typename Container<T>::iterator const& Other)
+	{
+		_index = Other._index;
+		_wrapped_value = Other._wrapped_value;
+		_container = Other._container;
+		return *this;
+	}
+
+	//pre increment; ++a:
+	typename Container<T>::iterator& operator++(int)
+	{
+		*this = _container->get_iterator_at_index(_index+1);
+		return *this;
+	}
+
+	//pre decrement; --a:
+	typename Container<T>::iterator& operator--(int)
+	{
+		*this = _container->get_iterator_at_index(_index-1);
+		return *this;
+	}
+
+	//post increment; a++;
+	typename Container<T>::iterator operator++()
+	{
+		auto copy = *this;
+		*this =  _container->get_iterator_at_index(_index+1);
+		return copy;
+	}
+	
+	//post decrement; a--;
+	typename Container<T>::iterator operator--()
+	{
+		auto copy = *this;
+		return _container->get_iterator_at_index(_index-1);
+		return copy;
+	}
+
+	bool operator!=(typename Container<T>::iterator const& it)
+	{
+		return !(*this == it);
+	}
+	bool operator==(typename Container<T>::iterator const& it)
+	{
+		return _index == it._index; //check container here?
+	}
+
+	typename Container<T>::value_type& operator*()
+	{
+		return _wrapped_value;
+	}
+};
+}
+
+template <typename T>
+struct Container
+{
+	using difference_type = ptrdiff_t;
+	using size_type = std::size_t;
+	using value_type = WrappedValue<T>;
+	using pointer = value_type*;
+	using reference = value_type&;
+	using iterator = Iterator<T>;
+private:
+	iterator get_iterator_at_index(std::size_t index)
+	{
+		return iterator(this, _ptr + index, index);
+	}
+	bool operator==(Container const& other)
+	{
+		return this == &other;
+	}
 
 	T* _ptr;
-	std::size_t  _current_size;
-	std::unique_ptr<T[]> _allocated_ptr;
+	uint64_t _size;
 
-	MM_COW(T* ptr):
-		_ptr(ptr)
-		,_current_size(1)
+	friend Iterator<T>;
+	friend WrappedValue<T>;
+
+public:
+	Container(T* begin_ptr, T* end_ptr):
+		_ptr(begin_ptr)
+		, _size(end_ptr - begin_ptr)
 	{
 	}
 
-	MM_COW(T* start_ptr, T* end_ptr):
-		_ptr(start_ptr)
-		,_current_size(end_ptr - start_ptr)
+	iterator begin()
 	{
+		return get_iterator_at_index(0);
 	}
-	 
-	iterator begin() { return iterator(_ptr, 0, this); }
 
-	iterator end() { return iterator(_ptr + (_current_size-1), _current_size-1, this); }
-
-	iterator operator[](std::size_t index)
+	iterator end()
 	{
-		if (index >= _current_size)
+		return get_iterator_at_index(_size); ///one after valid region [0, _size-1] is indexable.
+	}
+
+	value_type at(std::size_t index)
+	{
+		if (index >= _size)
 		{
-			allocate(index + 1);
+			throw std::exception("");
 		}
-		return iterator(_ptr + index, index, this);
+
+		return *(get_iterator_at_index(index));
 	}
 
-	void allocate(std::size_t new_size)
+	value_type operator[](std::size_t index)
 	{
-		auto tmp_ptr = std::make_unique<T[]>(new_size);
-
-		std::memcpy(tmp_ptr.get(),_ptr, _current_size * sizeof(T));
-		_current_size = new_size;
-		_allocated_ptr = std::move(tmp_ptr);		
-		_ptr = _allocated_ptr.get();
+		return *(get_iterator_at_index(index));
 	}
 };
