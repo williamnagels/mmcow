@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(simple_uint8_t)
 	Container<T> _container(std::begin(simple), std::end(simple));
 	auto val = 0;
 
-	//auto it = std::cbegin(_container);
+	auto it2 = std::cbegin(_container);
 	auto it = std::begin(_container);
 	*it = val;
 	val++;

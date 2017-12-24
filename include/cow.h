@@ -7,101 +7,117 @@ struct Container;
 
 namespace
 {
-template <typename T>
+template <typename T, bool IsConst>
 class Iterator;
 
 template <typename T>
 class WrappedValue
 {
-	typename Container<T>::iterator* _iterator;
+	using container_pointer = std::add_pointer_t <std::add_const_t<Container<T>>>;
+	container_pointer _container;
+	std::size_t _index;
 public:
-	WrappedValue(typename Container<T>::iterator* iterator) :
-		_iterator(iterator) {}
+	WrappedValue(container_pointer container, std::size_t index) :
+		_container(container),
+		_index(index){}
 	operator T const&() const 
 	{ 
 		return *(_iterator->_container->_ptr + _iterator->_index)
 	}
 	typename Container<T>::value_type& operator=(T const& value)
 	{  
-		_iterator->_container->allocate(_iterator->_container->_size);
-		*(_iterator->_container->_ptr + _iterator->_index) = value;
+		//_container->allocate(_container->_size);
+		*(_container->_ptr + _index) = value;
 		return*this;
 	}
 };
 
-template <typename T>
+template <typename T, bool IsConst>
 class Iterator
 {
-	Container<T>* _container;
-	WrappedValue<T> _wrapped_value;
-	std::size_t _index;
-
-
 public:
 	using iterator_category = std::bidirectional_iterator_tag;
 	using difference_type = typename Container<T>::difference_type;
 	using size_type = typename Container<T>::size_type;
-	using value_type = typename Container<T>::value_type;
-	using pointer = typename Container<T>::pointer;
-	using reference = typename Container<T>::reference;
-	using iterator = typename Container<T>::iterator;
+	using value_type = std::conditional_t<
+		IsConst
+		, std::add_const_t<typename Container<T>::value_type>
+		, typename Container<T>::value_type>;
 
-	Iterator(Container<T>* container, std::size_t index):
+	using pointer = value_type * ;
+	using reference = value_type &;
+	using iterator = std::conditional_t<
+		IsConst
+		, typename Container<T>::const_iterator
+		, typename Container<T>::iterator
+	>;
+
+	using container_pointer = std::conditional_t <
+		IsConst
+		, std::add_pointer_t<std::add_const_t<Container<T>>>
+		, std::add_pointer_t <Container<T>>
+	>;
+private:
+	container_pointer _container;
+	WrappedValue<T> _wrapped_value;
+	std::size_t _index;
+
+public:
+	Iterator(container_pointer container, std::size_t index):
 		_container(container)
-		, _wrapped_value(this)
+		, _wrapped_value(_container, _index)
 		, _index(index)
 	{
 
 	}
-
-	typename Container<T>::iterator& operator=(typename Container<T>::iterator const& Other)
+	typename iterator& operator=(typename iterator const& Other)
 	{
 		_index = Other._index;
-		_wrapped_value = WrappedValue<T>(this);
+		_wrapped_value = WrappedValue<T>(_container, _index);
 		_container = Other._container;
 		return *this;
 	}
 
 	//pre increment; ++a:
-	typename Container<T>::iterator& operator++(int)
+	typename iterator& operator++(int)
 	{
 		operator=(_container->get_iterator_at_index(_index + 1));
 		return *this;
 	}
 
 	//pre decrement; --a:
-	typename Container<T>::iterator& operator--(int)
+	typename iterator& operator--(int)
 	{
 		operator=(container->get_iterator_at_index(_index - 1));
 		return *this;
 	}
 
 	//post increment; a++;
-	typename Container<T>::iterator operator++()
+	typename iterator operator++()
 	{
 		auto copy = *this;
-		*this =  _container->get_iterator_at_index(_index+1);
+		++(*this); //= _container->get_iterator_at_index(_index + 1);
 		return copy;
 	}
 	
 	//post decrement; a--;
-	typename Container<T>::iterator operator--()
+	typename iterator operator--()
 	{
 		auto copy = *this;
-		return _container->get_iterator_at_index(_index-1);
+		--(*this); //return _container->get_iterator_at_index(_index-1);
 		return copy;
 	}
 
-	bool operator!=(typename Container<T>::iterator const& it)
+	bool operator!=(typename iterator const& it)
 	{
 		return !(*this == it);
 	}
-	bool operator==(typename Container<T>::iterator const& it)
+	bool operator==(typename iterator const& it)
 	{
 		return _index == it._index; //check container here?
 	}
 
-	typename Container<T>::value_type& operator*()
+	reference operator*()
 	{
 		return _wrapped_value;
 	}
@@ -118,8 +134,13 @@ struct Container
 	using value_type = WrappedValue<T>;
 	using pointer = value_type*;
 	using reference = value_type&;
-	using iterator = Iterator<T>;
+	using iterator = Iterator<T, false>;
+	using const_iterator = Iterator<T, true>;
 private:
+	const_iterator get_iterator_at_index(std::size_t index) const
+	{
+		return const_iterator(this, index);
+	}
 	iterator get_iterator_at_index(std::size_t index)
 	{
 		return iterator(this, index);
@@ -133,8 +154,8 @@ private:
 	uint64_t _size;
 	std::unique_ptr<T[]> _allocated_ptr;
 
-	friend Iterator<T>;
-	friend WrappedValue<T>;
+	friend iterator;
+	friend value_type;
 
 
 	void allocate(uint64_t new_size)
@@ -163,6 +184,17 @@ public:
 		, _allocated_ptr()
 	{
 	}
+
+	const_iterator begin() const
+	{
+		return get_iterator_at_index(0);
+	}
+
+	const_iterator end() const
+	{
+		return get_iterator_at_index(_size);
+	}
+
 	iterator begin()
 	{
 		return get_iterator_at_index(0);
@@ -173,6 +205,8 @@ public:
 		return get_iterator_at_index(_size); ///one after valid region [0, _size-1] is indexable.
 	}
 
+
+	/*
 	value_type at(std::size_t index)
 	{
 		if (index >= _size)
@@ -191,5 +225,5 @@ public:
 		}
 
 		return *(get_iterator_at_index(index));
-	}
+	}*/
 };
