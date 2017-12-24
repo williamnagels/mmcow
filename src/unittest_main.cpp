@@ -12,13 +12,24 @@ BOOST_AUTO_TEST_CASE(simple_uint8_t)
 	using T = uint8_t;
 	T simple[100];
 	Container<T> _container(std::begin(simple), std::end(simple));
+	auto val = 0;
 
+	//auto it = std::cbegin(_container);
+	auto it = std::begin(_container);
+	*it = val;
+	val++;
+	it++;
+	*it = val;
 
-	auto end = std::end(_container);
-	auto begin = std::begin(_container);
-	*begin = 5;
+	int i = 0;
+	int v = i++;
+	v = ++i;
 
-	std::iota(std::begin(_container), std::end(_container), 0);
+	/*
+	for (; it != std::end(_container); it++)
+	{
+		*it = val;
+	}*/
 }
 
 /*

@@ -4,19 +4,27 @@
 template<typename T>
 struct Container;
 
+
 namespace
 {
 template <typename T>
+class Iterator;
+
+template <typename T>
 class WrappedValue
 {
-	T* _value;
+	typename Container<T>::iterator* _iterator;
 public:
-	WrappedValue(T* value) :
-		_value(value) {}
-	operator T const&() const { return *_value; }
-	WrappedValue& operator=(T const& value)
+	WrappedValue(typename Container<T>::iterator* iterator) :
+		_iterator(iterator) {}
+	operator T const&() const 
 	{ 
-		*_value = value; 
+		return *(_iterator->_container->_ptr + _iterator->_index)
+	}
+	typename Container<T>::value_type& operator=(T const& value)
+	{  
+		_iterator->_container->allocate(_iterator->_container->_size);
+		*(_iterator->_container->_ptr + _iterator->_index) = value;
 		return*this;
 	}
 };
@@ -28,6 +36,7 @@ class Iterator
 	WrappedValue<T> _wrapped_value;
 	std::size_t _index;
 
+
 public:
 	using iterator_category = std::bidirectional_iterator_tag;
 	using difference_type = typename Container<T>::difference_type;
@@ -37,9 +46,9 @@ public:
 	using reference = typename Container<T>::reference;
 	using iterator = typename Container<T>::iterator;
 
-	Iterator(Container<T>* container, T* value, std::size_t index):
+	Iterator(Container<T>* container, std::size_t index):
 		_container(container)
-		, _wrapped_value(value)
+		, _wrapped_value(this)
 		, _index(index)
 	{
 
@@ -48,7 +57,7 @@ public:
 	typename Container<T>::iterator& operator=(typename Container<T>::iterator const& Other)
 	{
 		_index = Other._index;
-		_wrapped_value = Other._wrapped_value;
+		_wrapped_value = WrappedValue<T>(this);
 		_container = Other._container;
 		return *this;
 	}
@@ -56,14 +65,14 @@ public:
 	//pre increment; ++a:
 	typename Container<T>::iterator& operator++(int)
 	{
-		*this = _container->get_iterator_at_index(_index+1);
+		operator=(_container->get_iterator_at_index(_index + 1));
 		return *this;
 	}
 
 	//pre decrement; --a:
 	typename Container<T>::iterator& operator--(int)
 	{
-		*this = _container->get_iterator_at_index(_index-1);
+		operator=(container->get_iterator_at_index(_index - 1));
 		return *this;
 	}
 
@@ -96,6 +105,8 @@ public:
 	{
 		return _wrapped_value;
 	}
+
+	friend WrappedValue<T>;
 };
 }
 
@@ -111,7 +122,7 @@ struct Container
 private:
 	iterator get_iterator_at_index(std::size_t index)
 	{
-		return iterator(this, _ptr + index, index);
+		return iterator(this, index);
 	}
 	bool operator==(Container const& other)
 	{
@@ -120,17 +131,38 @@ private:
 
 	T* _ptr;
 	uint64_t _size;
+	std::unique_ptr<T[]> _allocated_ptr;
 
 	friend Iterator<T>;
 	friend WrappedValue<T>;
 
+
+	void allocate(uint64_t new_size)
+	{
+		if (_allocated_ptr && new_size == _size)
+		{
+			return;
+		}
+
+		auto tmp = std::make_unique<T[]>(new_size);
+		std::memcpy(tmp.get(), _ptr, _size*sizeof(T));
+		_allocated_ptr = std::move(tmp);
+		_ptr = _allocated_ptr.get();
+		_size = new_size;
+	}
 public:
 	Container(T* begin_ptr, T* end_ptr):
 		_ptr(begin_ptr)
 		, _size(end_ptr - begin_ptr)
+		, _allocated_ptr()
 	{
 	}
-
+	Container(T* begin_ptr) :
+		_ptr(begin_ptr)
+		, _size(1)
+		, _allocated_ptr()
+	{
+	}
 	iterator begin()
 	{
 		return get_iterator_at_index(0);
@@ -153,6 +185,11 @@ public:
 
 	value_type operator[](std::size_t index)
 	{
+		if (index >= _size)
+		{
+			allocate(index + 1);
+		}
+
 		return *(get_iterator_at_index(index));
 	}
 };
