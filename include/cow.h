@@ -13,7 +13,7 @@ class Iterator;
 template <typename T>
 class WrappedValue
 {
-	using container_pointer = std::add_pointer_t <std::add_const_t<Container<T>>>;
+	using container_pointer = std::add_pointer_t <Container<T>>;
 	container_pointer _container;
 	std::size_t _index;
 public:
@@ -26,7 +26,7 @@ public:
 	}
 	typename Container<T>::value_type& operator=(T const& value)
 	{  
-		//_container->allocate(_container->_size);
+		_container->allocate(_container->_size);
 		*(_container->_ptr + _index) = value;
 		return*this;
 	}
@@ -34,7 +34,7 @@ public:
 
 template <typename T, bool IsConst>
 class Iterator
-{
+{ 
 public:
 	using iterator_category = std::bidirectional_iterator_tag;
 	using difference_type = typename Container<T>::difference_type;
@@ -52,11 +52,12 @@ public:
 		, typename Container<T>::iterator
 	>;
 
-	using container_pointer = std::conditional_t <
+	/*using container_pointer = std::conditional_t <
 		IsConst
 		, std::add_pointer_t<std::add_const_t<Container<T>>>
 		, std::add_pointer_t <Container<T>>
-	>;
+	>;*/
+	using container_pointer = std::add_pointer_t <Container<T>>;
 private:
 	container_pointer _container;
 	WrappedValue<T> _wrapped_value;
@@ -65,7 +66,7 @@ private:
 public:
 	Iterator(container_pointer container, std::size_t index):
 		_container(container)
-		, _wrapped_value(_container, _index)
+		, _wrapped_value(_container, index)
 		, _index(index)
 	{
 
@@ -96,7 +97,8 @@ public:
 	typename iterator operator++()
 	{
 		auto copy = *this;
-		++(*this); //= _container->get_iterator_at_index(_index + 1);
+		//++(*this); //= 
+		_container->get_iterator_at_index(_index + 1);
 		return copy;
 	}
 	
@@ -104,7 +106,8 @@ public:
 	typename iterator operator--()
 	{
 		auto copy = *this;
-		--(*this); //return _container->get_iterator_at_index(_index-1);
+		//--(*this); //return 
+		_container->get_iterator_at_index(_index-1);
 		return copy;
 	}
 
@@ -139,7 +142,7 @@ struct Container
 private:
 	const_iterator get_iterator_at_index(std::size_t index) const
 	{
-		return const_iterator(this, index);
+		return const_iterator(const_cast<Container<T>*>(this), index);
 	}
 	iterator get_iterator_at_index(std::size_t index)
 	{
@@ -205,8 +208,6 @@ public:
 		return get_iterator_at_index(_size); ///one after valid region [0, _size-1] is indexable.
 	}
 
-
-	/*
 	value_type at(std::size_t index)
 	{
 		if (index >= _size)
@@ -225,5 +226,5 @@ public:
 		}
 
 		return *(get_iterator_at_index(index));
-	}*/
+	}
 };
