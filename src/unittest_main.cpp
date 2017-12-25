@@ -6,7 +6,7 @@
 #include <algorithm>
 BOOST_AUTO_TEST_SUITE(mmcow)
 
-
+/*
 BOOST_AUTO_TEST_CASE(simple_uint8_t)
 {
 	using T = uint8_t;
@@ -14,23 +14,13 @@ BOOST_AUTO_TEST_CASE(simple_uint8_t)
 	Container<T> _container(std::begin(simple), std::end(simple));
 	auto val = 0;
 
-	auto it2 = std::cbegin(_container);
 	auto it = std::begin(_container);
-	*it = val;
-	val++;
-	it++;
-	*it = val;
 
-	int i = 0;
-	int v = i++;
-	v = ++i;
-
-	/*
 	for (; it != std::end(_container); it++)
 	{
 		*it = val;
-	}*/
-}
+	}
+}*/
 
 /*
 BOOST_AUTO_TEST_CASE(simple_uint8_t)
@@ -74,7 +64,7 @@ BOOST_AUTO_TEST_CASE(simple_uint8_t_array)
 	BOOST_CHECK_NE(first_allocation_ptr, second_allocation_ptr);
 
 }*/
-/*
+
 template <class T, std::size_t size>
 struct ftor
 {
@@ -87,17 +77,37 @@ struct ftor
 		T simple[size];
 		std::iota(std::begin(simple), std::end(simple), 0);
 
-		MM_COW<T> _cow(std::begin(simple), std::end(simple));
+		Container<T> _cow(std::begin(simple), std::end(simple));
 
 		for (auto idx = 0; idx < size; idx++)
 		{
 			BOOST_CHECK_EQUAL(simple[idx], idx);
-			//BOOST_CHECK_EQUAL(_cow[idx], simple[idx]);
-			//BOOST_CHECK_EQUAL(&(T)(_cow[idx]), simple + idx);
+			BOOST_CHECK_EQUAL(_cow[idx], simple[idx]);
+			BOOST_CHECK_EQUAL(&(T)(_cow[idx]), simple + idx);
 		}
 
+		std::iota(std::begin(_cow), std::end(_cow), 0);
+		for (auto idx = 0; idx < size; idx++)
+		{
+			BOOST_CHECK_EQUAL(simple[idx], idx);
+			BOOST_CHECK_EQUAL(_cow[idx], simple[idx]);
+			BOOST_CHECK_NE(&(T)(_cow[idx]), simple + idx);
+		}
+
+		uint64_t counter = 0;
+		std::for_each(
+			std::begin(_cow),
+			std::end(_cow),
+			[&](auto const& val) 
+			{
+				BOOST_CHECK_EQUAL(val, counter++);
+			});
+		
 		std::reverse(std::begin(_cow), std::end(_cow));
-		//T* first_allocation_ptr = &(T)(_cow[0]);
+
+		/*
+		
+		T* first_allocation_ptr = &(T)(_cow[0]);
 		for (auto idx = 0; idx < size; idx++)
 		{
 			BOOST_CHECK_EQUAL(simple[idx], idx);
@@ -117,13 +127,14 @@ struct ftor
 		BOOST_CHECK_EQUAL((T)_cow[55], 88);
 		BOOST_CHECK_EQUAL((T)_cow[100], 100);
 		BOOST_CHECK_NE(first_allocation_ptr, second_allocation_ptr);
+		*/
 	}
-};*/
+};
 
 BOOST_AUTO_TEST_CASE(simple_uint64_t_array)
 {
-	/*ftor<uint8_t,  5>();
-	ftor<uint16_t, 100>;
+	ftor<uint8_t,  5>();
+	/*ftor<uint16_t, 100>;
 	ftor<uint32_t, 100>;
 	ftor<uint64_t, 100>;
 	ftor<int8_t, 100>;
