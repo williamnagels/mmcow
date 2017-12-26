@@ -64,5 +64,19 @@ BOOST_AUTO_TEST_CASE(fundamental_types)
 	ftor<int64_t, 20>();
 }
 
+BOOST_AUTO_TEST_CASE(const_iterator_support)
+{
+	uint16_t simple[100];
+	std::iota(std::begin(simple), std::end(simple), 0);
+
+	Container<uint16_t> _cow(std::begin(simple), std::end(simple));
+
+	uint16_t counter = 0;
+	std::for_each(std::cbegin(_cow), std::cend(_cow), [&](auto const& it)
+	{
+		BOOST_CHECK_EQUAL((uint16_t)counter++, it);
+	});
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

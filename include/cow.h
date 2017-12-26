@@ -60,7 +60,6 @@ public:
 		, std::add_pointer_t<std::add_const_t<Container<T>>>
 		, std::add_pointer_t <Container<T>>
 	>;
-	//using container_pointer = std::add_pointer_t <Container<T>>;
 private:
 	container_pointer _container;
 	std::size_t _index;
@@ -116,9 +115,9 @@ public:
 		return _index == it._index; //check container here?
 	}
 
-	value_type operator*()
+	value_type operator*() const
 	{
-		return WrappedValue<T>(_container, _index);
+		return WrappedValue<T>(const_cast<std::add_pointer_t <Container<T>>>(_container), _index);
 	}
 };
 }
@@ -151,6 +150,7 @@ private:
 	std::unique_ptr<T[]> _allocated_ptr;
 
 	friend iterator;
+	friend const_iterator;
 	friend value_type;
 
 
