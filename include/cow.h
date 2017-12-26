@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-
+#include <ostream>
 template<typename T>
 struct Container;
 
@@ -10,30 +10,29 @@ namespace
 template <typename T, bool IsConst>
 class Iterator;
 
-template <typename T, bool IsConst>
+template <typename T>
 class WrappedValue
 {
-	using container_pointer = std::conditional_t <
-		IsConst
-		, std::add_pointer_t<std::add_const_t<Container<T>>>
-		, std::add_pointer_t <Container<T>>
-	>;
+	using container_pointer = std::add_pointer_t <Container<T>>;
 	container_pointer _container;
 	std::size_t _index;
 public:
 	WrappedValue(container_pointer container, std::size_t index) :
-		_container(container),
-		_index(index){}
+		_container(container)
+		, _index(index) {}
+
 	operator T const&() const 
 	{ 
 		return *(_container->_ptr + _index);
 	}
-	typename Container<T>::value_type& operator=(T const& value)
+
+	WrappedValue<T>& operator=(T const& value)
 	{  
 		_container->allocate(_container->_size);
 		*(_container->_ptr + _index) = value;
-		return*this;
+		return *this;
 	}
+
 };
 
 template <typename T, bool IsConst>
@@ -64,13 +63,11 @@ public:
 	//using container_pointer = std::add_pointer_t <Container<T>>;
 private:
 	container_pointer _container;
-	WrappedValue<T, IsConst> _wrapped_value;
 	std::size_t _index;
 
 public:
 	Iterator(container_pointer container, std::size_t index):
 		_container(container)
-		, _wrapped_value(_container, index)
 		, _index(index)
 	{
 
@@ -79,32 +76,31 @@ public:
 	{
 		_index = Other._index;
 		_container = Other._container;
-		_wrapped_value = WrappedValue<T, IsConst>(_container, _index);
 		return *this;
 	}
 
 	//pre increment; ++a:
-	typename iterator& operator++(int)
+	typename iterator& operator++()
 	{
 		operator=(_container->get_iterator_at_index(_index + 1));
 		return *this;
 	}
 
 	//post increment; a++;
-	typename iterator operator++()
+	typename iterator operator++(int)
 	{
 		auto copy = *this;
 		operator=(_container->get_iterator_at_index(_index + 1));
 		return copy;
 	}
 	//pre decrement; --a:
-	typename iterator& operator--(int)
+	typename iterator& operator--()
 	{
 		operator=(_container->get_iterator_at_index(_index - 1));
 		return *this;
 	}
 	//post decrement; a--;
-	typename iterator operator--()
+	typename iterator operator--(int)
 	{
 		auto copy = *this;
 		operator=(_container->get_iterator_at_index(_index - 1));
@@ -120,21 +116,18 @@ public:
 		return _index == it._index; //check container here?
 	}
 
-	reference operator*()
+	value_type operator*()
 	{
-		return _wrapped_value;
+		return WrappedValue<T>(_container, _index);
 	}
-
-	friend WrappedValue<T, IsConst>;
 };
 }
-
 template <typename T>
 struct Container
 {
 	using difference_type = ptrdiff_t;
 	using size_type = std::size_t;
-	using value_type = WrappedValue<T, false>;
+	using value_type = WrappedValue<T>;
 	using pointer = value_type*;
 	using reference = value_type&;
 	using iterator = Iterator<T, false>;
