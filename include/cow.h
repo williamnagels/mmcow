@@ -1,19 +1,24 @@
 #pragma once
 #include <memory>
-namespace
+
+namespace MMap
 {
 	template <typename T>
 	class Container;
+}
 
+
+namespace
+{
 	template <typename T>
 	class WrappedValue
 	{
 		std::size_t _index;
-		Container<T>* _container;
-		friend Container<T>;
+		MMap::Container<T>* _container;
+		friend MMap::Container<T>;
 	
 	public:
-		WrappedValue(std::size_t index, Container<T>* container):
+		WrappedValue(std::size_t index, MMap::Container<T>* container):
 			_index(index)
 			,_container(container)
 		{
@@ -42,11 +47,11 @@ namespace
 	{
 	public:
 		using iterator_category = std::bidirectional_iterator_tag;
-		using difference_type = typename Container<T>::difference_type;
-		using size_type = typename Container<T>::size_type;
+		using difference_type = typename MMap::Container<T>::difference_type;
+		using size_type = typename MMap::Container<T>::size_type;
 
-		using const_value_type = std::add_const_t<typename Container<T>::value_type>;
-		using non_const_value_type = typename Container<T>::value_type;
+		using const_value_type = std::add_const_t<typename MMap::Container<T>::value_type>;
+		using non_const_value_type = typename MMap::Container<T>::value_type;
 		using value_type = std::conditional_t<
 			IsConst
 			, const_value_type
@@ -55,15 +60,15 @@ namespace
 		using reference = value_type & ;
 		using iterator = std::conditional_t<
 			IsConst
-			, typename Container<T>::const_iterator
-			, typename Container<T>::iterator
+			, typename MMap::Container<T>::const_iterator
+			, typename MMap::Container<T>::iterator
 		>;
 	private:
-		Container<T>* _container;
+		MMap::Container<T>* _container;
 		std::size_t _index;
 
 	public:
-		Iterator(Container<T>* container, std::size_t index) :
+		Iterator(MMap::Container<T>* container, std::size_t index) :
 			_container(container)
 			, _index(index)
 		{
@@ -123,120 +128,116 @@ namespace
 			return WrappedValue<T>(_index, _container);
 		}
 	};
-
-	template <typename T>
-	class Container
-	{
-		T* _ptr;
-		std::size_t _size;
-		std::unique_ptr<T[]> _allocated_ptr;
-
-		void allocate(uint64_t new_size)
-		{
-			if (_allocated_ptr && new_size == _size)
-			{
-				return;
-			}
-
-			auto tmp = std::make_unique<T[]>(new_size);
-			std::memcpy(tmp.get(), _ptr, _size * sizeof(T));
-			_allocated_ptr = std::move(tmp);
-			_ptr = _allocated_ptr.get();
-			_size = new_size;
-		}
-
-		void set_value_at_index(std::size_t index, T const& value) { allocate(_size); *(_ptr + index) = value; }
-
-		using iterator = Iterator<T, false>;
-		using const_iterator = Iterator<T, true>;
-		using difference_type = ptrdiff_t;
-		using size_type = std::size_t;
-		using value_type = WrappedValue<T>;
-
-		friend iterator;
-		friend const_iterator;
-
-		template <typename ItTy>
-		ItTy get_iterator_at_index(std::size_t index) const
-		{
-			return ItTy(const_cast<Container<T>*>(this), index);
-		}
-		friend WrappedValue<T>;
-	public:
-
-		Container(T* begin_address, T* end_address) :
-			_ptr(begin_address)
-			, _size(end_address - begin_address)
-		{
-
-		}
-		Container(T* begin_address) :
-			_ptr(begin_address)
-			, _size(1)
-		{
-
-		}
-
-		void resize(std::size_t size)
-		{
-			allocate(size);
-		}
-
-		std::size_t get_size()
-		{
-			return _size;
-		}
-
-		WrappedValue<T> operator[](std::size_t index)
-		{
-			if (index >= _size)
-			{
-				allocate(index + 1);
-			}
-			return WrappedValue<T>(index, this);
-		}
-
-		const WrappedValue<T> operator[](std::size_t index) const
-		{
-			return WrappedValue<T>(index, const_cast<Container<T>*>(this));
-		}
-		iterator begin()
-		{
-			return get_iterator_at_index<iterator>(0);
-		}
-
-		iterator end()
-		{
-			return get_iterator_at_index<iterator>(_size);
-		}
-		const_iterator begin() const
-		{
-			return get_iterator_at_index<const_iterator>(0);
-		}
-
-		const_iterator end() const
-		{
-			return get_iterator_at_index<const_iterator>(_size);
-		}
-	};
-
-
-	template <typename T, typename MemberType>
-	MemberType get(Container<T> const& cow, MemberType T::* _member_ptr, std::size_t index=0)
-	{
-
-		return ((T)cow[index]).*_member_ptr;
-		//(cow[index]).
-
-		//return ((T)(cow[index])).(*_member_ptr);
-	}
-
-	template <typename T, typename MemberType, typename ParamType>
-	void set(Container<T>& cow, MemberType T::* _member_ptr, ParamType val, std::size_t index = 0)
-	{
-		T t = cow[index];
-		t.*_member_ptr = val;
-		cow[index] = t;
-	}
-
 };
+namespace MMap
+{
+template <typename T>
+class Container
+{
+	T* _ptr;
+	std::size_t _size;
+	std::unique_ptr<T[]> _allocated_ptr;
+
+	void allocate(uint64_t new_size)
+	{
+		if (_allocated_ptr && new_size == _size)
+		{
+			return;
+		}
+
+		auto tmp = std::make_unique<T[]>(new_size);
+		std::memcpy(tmp.get(), _ptr, _size * sizeof(T));
+		_allocated_ptr = std::move(tmp);
+		_ptr = _allocated_ptr.get();
+		_size = new_size;
+	}
+
+	void set_value_at_index(std::size_t index, T const& value) { allocate(_size); *(_ptr + index) = value; }
+
+	using iterator = Iterator<T, false>;
+	using const_iterator = Iterator<T, true>;
+	using difference_type = ptrdiff_t;
+	using size_type = std::size_t;
+	using value_type = WrappedValue<T>;
+
+	friend iterator;
+	friend const_iterator;
+
+	template <typename ItTy>
+	ItTy get_iterator_at_index(std::size_t index) const
+	{
+		return ItTy(const_cast<MMap::Container<T>*>(this), index);
+	}
+	friend WrappedValue<T>;
+public:
+
+	Container(T* begin_address, T* end_address) :
+		_ptr(begin_address)
+		, _size(end_address - begin_address)
+	{
+
+	}
+	Container(T* begin_address) :
+		_ptr(begin_address)
+		, _size(1)
+	{
+
+	}
+
+	void resize(std::size_t size)
+	{
+		allocate(size);
+	}
+
+	std::size_t get_size()
+	{
+		return _size;
+	}
+
+	WrappedValue<T> operator[](std::size_t index)
+	{
+		if (index >= _size)
+		{
+			allocate(index + 1);
+		}
+		return WrappedValue<T>(index, this);
+	}
+
+	const WrappedValue<T> operator[](std::size_t index) const
+	{
+		return WrappedValue<T>(index, const_cast<MMap::Container<T>*>(this));
+	}
+	iterator begin()
+	{
+		return get_iterator_at_index<iterator>(0);
+	}
+
+	iterator end()
+	{
+		return get_iterator_at_index<iterator>(_size);
+	}
+	const_iterator begin() const
+	{
+		return get_iterator_at_index<const_iterator>(0);
+	}
+
+	const_iterator end() const
+	{
+		return get_iterator_at_index<const_iterator>(_size);
+	}
+};
+}
+
+template <typename T, typename MemberType>
+MemberType get(MMap::Container<T> const& cow, MemberType T::* _member_ptr, std::size_t index=0)
+{
+	return ((T)cow[index]).*_member_ptr;
+}
+
+template <typename T, typename MemberType, typename ParamType>
+void set(MMap::Container<T>& cow, MemberType T::* _member_ptr, ParamType val, std::size_t index = 0)
+{
+	T t = cow[index];
+	t.*_member_ptr = val;
+	cow[index] = t;
+}

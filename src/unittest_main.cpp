@@ -19,7 +19,7 @@ struct ftor
 		T simple[size];
 		std::iota(std::begin(simple), std::end(simple), 0);
 
-		Container<T> _cow(std::begin(simple), std::end(simple));
+		MMap::Container<T> _cow(std::begin(simple), std::end(simple));
 		
 		for (auto idx = 0; idx < size; idx++)
 		{
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(const_iterator_support)
 	uint16_t simple[100];
 	std::iota(std::begin(simple), std::end(simple), 0);
 
-	Container<uint16_t> _cow(std::begin(simple), std::end(simple));
+	MMap::Container<uint16_t> _cow(std::begin(simple), std::end(simple));
 
 	uint16_t counter = 0;
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(aggregate_POD_array)
 	A simple[100];
 	simple[0].value1 = 100;
 	simple[0].value2 = 139;
-	Container<A> _cow(std::begin(simple), std::end(simple));
+	MMap::Container<A> _cow(std::begin(simple), std::end(simple));
 
 	BOOST_CHECK_EQUAL(((A)_cow[0]).value1, 100);
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(aggregate_POD_single_resize)
 		uint32_t value2;
 	};
 	A simple;
-	Container<A> _cow(&simple);
+	MMap::Container<A> _cow(&simple);
 
 	A a;
 	a.value1 = 33;
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(set_get_POD_A)
 		uint32_t value2;
 	};
 	A simple;
-	Container<A> _cow(&simple);
+	MMap::Container<A> _cow(&simple);
 	A a;
 	a.value1 = 33;
 	a.value2 = 34;
