@@ -11,10 +11,8 @@ namespace
 		std::size_t _index;
 		Container<T>* _container;
 		friend Container<T>;
-		//friend Iterator<T, true>;
-		//friend Iterator<T, false>;
+	
 	public:
-
 		WrappedValue(std::size_t index, Container<T>* container):
 			_index(index)
 			,_container(container)
@@ -198,6 +196,10 @@ namespace
 			return WrappedValue<T>(index, this);
 		}
 
+		const WrappedValue<T> operator[](std::size_t index) const
+		{
+			return WrappedValue<T>(index, const_cast<Container<T>*>(this));
+		}
 		iterator begin()
 		{
 			return get_iterator_at_index<iterator>(0);
@@ -217,4 +219,24 @@ namespace
 			return get_iterator_at_index<const_iterator>(_size);
 		}
 	};
+
+
+	template <typename T, typename MemberType>
+	MemberType get(Container<T> const& cow, MemberType T::* _member_ptr, std::size_t index=0)
+	{
+
+		return ((T)cow[index]).*_member_ptr;
+		//(cow[index]).
+
+		//return ((T)(cow[index])).(*_member_ptr);
+	}
+
+	template <typename T, typename MemberType, typename ParamType>
+	void set(Container<T>& cow, MemberType T::* _member_ptr, ParamType val, std::size_t index = 0)
+	{
+		T t = cow[index];
+		t.*_member_ptr = val;
+		cow[index] = t;
+	}
+
 };

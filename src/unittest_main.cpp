@@ -138,6 +138,30 @@ BOOST_AUTO_TEST_CASE(aggregate_POD_single_resize)
 	_cow[1] = a;
 	BOOST_CHECK_EQUAL(((A)_cow[1]).value1, 99);
 	BOOST_CHECK_EQUAL(((A)_cow[1]).value2, 100);
-}
 
+	//auto resize using []
+	a.value1 = 150;
+	a.value2 = 151;
+	_cow[2] = a;
+	BOOST_CHECK_EQUAL(((A)_cow[2]).value1, 150);
+	BOOST_CHECK_EQUAL(((A)_cow[2]).value2, 151);
+}
+BOOST_AUTO_TEST_CASE(set_get_POD_A)
+{
+	struct A
+	{
+		uint16_t value1;
+		uint32_t value2;
+	};
+	A simple;
+	Container<A> _cow(&simple);
+	A a;
+	a.value1 = 33;
+	a.value2 = 34;
+	_cow[0] = a;
+
+	set(_cow, &A::value1, 10);
+	auto v = get(_cow, &A::value1);
+	BOOST_CHECK_EQUAL(v, 10);
+}
 BOOST_AUTO_TEST_SUITE_END()
