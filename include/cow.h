@@ -40,6 +40,11 @@ namespace
 			operator=(t);
 			return *this;
 		}
+		WrappedValue<T>& operator=(WrappedValue<T> const& value) &
+		{
+			operator=((T)value);
+			return *this;
+		}
 	};
 
 	template <typename T, bool IsConst>
@@ -93,20 +98,20 @@ namespace
 		typename iterator operator++(int)
 		{
 			auto copy = *this;
-			operator=(_container->get_iterator_at_index(_index + 1));
+			operator=(_container->get_iterator_at_index<iterator>(_index + 1));
 			return copy;
 		}
 		//pre decrement; --a:
 		typename iterator& operator--()
 		{
-			operator=(_container->get_iterator_at_index(_index - 1));
+			operator=(_container->get_iterator_at_index<iterator>(_index - 1));
 			return *this;
 		}
 		//post decrement; a--;
 		typename iterator operator--(int)
 		{
 			auto copy = *this;
-			operator=(_container->get_iterator_at_index(_index - 1));
+			operator=(_container->get_iterator_at_index<iterator>(_index - 1));
 			return copy;
 		}
 

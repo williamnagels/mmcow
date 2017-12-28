@@ -164,4 +164,36 @@ BOOST_AUTO_TEST_CASE(set_get_POD_A)
 	auto v = get(_cow, &A::value1);
 	BOOST_CHECK_EQUAL(v, 10);
 }
+
+BOOST_AUTO_TEST_CASE(swap_issue)
+{
+	uint16_t simple[100];
+	MMap::Container<uint16_t> container(std::begin(simple), std::end(simple));
+	container[0] = 0;
+	container[1] = 1;
+
+	container[0] = container[1];
+	BOOST_CHECK_EQUAL(container[0], 1);
+	BOOST_CHECK_EQUAL(container[1], 1);
+
+	container[0] = 0;
+
+	auto tmp = container[0]; 
+	// tmp is more or less a pointer and not an actually value. Creating a
+	// backup is not supported as of now.
+	container[0] = container[1];
+	container[1] = tmp;
+	BOOST_CHECK_EQUAL(container[0], 1); 
+	BOOST_CHECK_EQUAL(container[1], 1);
+
+	container[0] = 0;
+
+	auto tmp2 = (uint16_t)container[0];
+	// tmp is more or less a pointer and not an actually value. Creating a
+	// backup is not supported as of now.
+	container[0] = container[1];
+	container[1] = tmp2;
+	BOOST_CHECK_EQUAL(container[0], 1);
+	BOOST_CHECK_EQUAL(container[1], 0);
+}
 BOOST_AUTO_TEST_SUITE_END()
