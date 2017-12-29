@@ -25,3 +25,5 @@ add_custom_command(TARGET mmcow_tests
 
 target_link_libraries(mmcow_tests ${Boost_LIBRARIES})
 add_test(mmcow mmcow_tests)
+
+install(FILES include/cow.h DESTINATION include)
