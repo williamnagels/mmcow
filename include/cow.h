@@ -189,6 +189,19 @@ public:
 
 	}
 
+	template <typename V>
+	Container(V * const ptr):
+		Container(reinterpret_cast<T*>(ptr))
+	{
+
+	}
+
+	template <typename V>
+	Container(V* const begin_address, V* const end_address) :
+		Container(reinterpret_cast<T*>(begin_address), reinterpret_cast<T*>(end_address))
+	{
+
+	}
 	void resize(std::size_t size)
 	{
 		allocate(size);

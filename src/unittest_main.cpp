@@ -196,4 +196,30 @@ BOOST_AUTO_TEST_CASE(swap_issue)
 	BOOST_CHECK_EQUAL(container[0], 1);
 	BOOST_CHECK_EQUAL(container[1], 0);
 }
+
+BOOST_AUTO_TEST_CASE(other_type_reinterpret_cast_single_ptr)
+{
+	uint8_t simple[100];
+	simple[0] = 100;
+	simple[1] = 120;
+
+	struct A
+	{
+		uint8_t should_be_100;
+		uint8_t should_be_120;
+	};
+
+	MMap::Container<A> container(std::begin(simple), std::end(simple));
+
+
+	BOOST_CHECK_EQUAL(get(container, &A::should_be_100), 100);
+	BOOST_CHECK_EQUAL(get(container, &A::should_be_120), 120);
+	BOOST_CHECK_EQUAL(container.get_size(), 50);
+
+	MMap::Container<A> container2(std::begin(simple));
+	BOOST_CHECK_EQUAL(get(container2, &A::should_be_100), 100);
+	BOOST_CHECK_EQUAL(get(container2, &A::should_be_120), 120);
+	BOOST_CHECK_EQUAL(container2.get_size(), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
