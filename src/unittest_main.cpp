@@ -222,4 +222,47 @@ BOOST_AUTO_TEST_CASE(other_type_reinterpret_cast_single_ptr)
 	BOOST_CHECK_EQUAL(container2.get_size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(copy_ctor)
+{
+	uint8_t simple[100];
+	simple[0] = 100;
+	simple[1] = 120;
+
+	MMap::Container<uint8_t> container(std::begin(simple), std::end(simple));
+	MMap::Container<uint8_t> container2(container);
+
+	BOOST_CHECK_EQUAL(container[0], 100);
+	BOOST_CHECK_EQUAL(container[1], 120);
+	BOOST_CHECK_EQUAL(container2[0], 100);
+	BOOST_CHECK_EQUAL(container2[1], 120);
+
+	container[0] = 110;
+
+	BOOST_CHECK_EQUAL(container[0], 110);
+	BOOST_CHECK_EQUAL(container2[0], 100);
+
+	container2[0] = 144;
+
+	BOOST_CHECK_EQUAL(container[0], 110);
+	BOOST_CHECK_EQUAL(container2[0], 144);
+
+	MMap::Container<uint8_t> container3(container);
+
+	BOOST_CHECK_EQUAL(container[0], 110);
+	BOOST_CHECK_EQUAL(container2[0], 144);
+	BOOST_CHECK_EQUAL(container3[0], 110);
+}
+BOOST_AUTO_TEST_CASE(move_ctor)
+{
+	uint8_t simple[100];
+	simple[0] = 100;
+	simple[1] = 120;
+	MMap::Container<uint8_t> container(std::begin(simple), std::end(simple));
+	container[0] = 13;
+
+	MMap::Container<uint8_t> container2(std::move(container));
+
+	BOOST_CHECK_EQUAL(container2[0], 13);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
