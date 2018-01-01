@@ -265,4 +265,31 @@ BOOST_AUTO_TEST_CASE(move_ctor)
 	BOOST_CHECK_EQUAL(container2[0], 13);
 }
 
+BOOST_AUTO_TEST_CASE(simple_default_ctor)
+{
+	MMap::Container<uint8_t> container;
+	container[100] = 13;
+	BOOST_CHECK_EQUAL(container[100], 13);
+	BOOST_CHECK_EQUAL(container.get_size(), 101);
+}
+
+BOOST_AUTO_TEST_CASE(POD_default_ctor)
+{
+	struct A
+	{
+		uint8_t should_be_100;
+		uint8_t should_be_120;
+	};
+
+	MMap::Container<A> container;
+	A a;
+	a.should_be_100 = 100;
+	a.should_be_120 = 120;
+	container[10] = a;
+
+
+	BOOST_CHECK_EQUAL(get(container, &A::should_be_100, 10), 100);
+	BOOST_CHECK_EQUAL(get(container, &A::should_be_120, 10), 120);
+	BOOST_CHECK_EQUAL(container.get_size(), 11);
+}
 BOOST_AUTO_TEST_SUITE_END()

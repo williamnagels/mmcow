@@ -223,6 +223,13 @@ public:
 		_size = other_container._size;
 		_allocated_ptr = std::move(other_container._allocated_ptr);
 	}
+
+	Container() :
+		_ptr(nullptr)
+		,_size(0)
+		,_allocated_ptr()
+	{
+	}
 	void resize(std::size_t size)
 	{
 		allocate(size);
