@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-
+#include <ostream>
 namespace MMap
 {
 	template <typename T>
@@ -235,7 +235,7 @@ public:
 		allocate(size);
 	}
 
-	std::size_t get_size()
+	std::size_t get_size() const
 	{
 		return _size;
 	}
@@ -271,6 +271,11 @@ public:
 	{
 		return get_iterator_at_index<const_iterator>(_size);
 	}
+	friend std::ostream& operator<<(std::ostream& os, MMap::Container<T> const& container)
+	{
+		os.write(reinterpret_cast<char const*const>(container._ptr), container.get_size() * sizeof(T));
+		return os;
+	}
 };
 }
 
@@ -287,3 +292,4 @@ void set(MMap::Container<T>& cow, MemberType T::* _member_ptr, ParamType val, st
 	t.*_member_ptr = val;
 	cow[index] = t;
 }
+

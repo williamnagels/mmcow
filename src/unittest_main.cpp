@@ -2,6 +2,8 @@
 #include <boost/test/unit_test.hpp> 
 #include <include/cow.h>
 
+#include <iostream>
+#include <fstream>
 #include <numeric>
 #include <algorithm>
 BOOST_AUTO_TEST_SUITE(mmcow)
@@ -291,5 +293,53 @@ BOOST_AUTO_TEST_CASE(POD_default_ctor)
 	BOOST_CHECK_EQUAL(get(container, &A::should_be_100, 10), 100);
 	BOOST_CHECK_EQUAL(get(container, &A::should_be_120, 10), 120);
 	BOOST_CHECK_EQUAL(container.get_size(), 11);
+}
+
+bool is_little_endian()
+{
+	uint16_t some_value = 10;
+
+	uint8_t* some_ptr = reinterpret_cast<uint8_t*>(&some_value);
+
+	return *some_ptr == some_value;
+}
+
+BOOST_AUTO_TEST_CASE(stream_overload)
+{
+	uint16_t simple[50];
+
+	std::iota(std::begin(simple), std::end(simple), 100); //from 100 to 149
+
+	MMap::Container<uint16_t> container(std::begin(simple), std::end(simple));
+
+	BOOST_CHECK_EQUAL(container.get_size(), 50);
+	std::ofstream stream;
+	stream.open("dump_function");
+
+	stream << container;
+
+	stream.close();
+
+	std::ifstream ifs("dump_function", std::ifstream::in);
+
+	uint16_t expected_value = 100;
+	do
+	{
+		uint8_t first_byte = ifs.get();
+		uint8_t last_byte = ifs.get();
+
+		uint16_t value = 0;
+
+		if (is_little_endian())
+		{
+			value=first_byte | (last_byte << 8);
+		}
+		else
+		{
+			value = last_byte | (first_byte << 8);
+		}
+		BOOST_CHECK_EQUAL(value, expected_value++);
+	} 
+	while (expected_value <= 149);
 }
 BOOST_AUTO_TEST_SUITE_END()
