@@ -11,8 +11,8 @@ A copy of the full array is created and the value is replaced in the copied arra
 ```c++
 	T t;
 	container[0] = t;
-	bool b = (container[0] == array[0]); //b =false
-	b = (container[0] == t); //b = true
+	BOOST_CHECK_NE(container[0], array[0]);
+	BOOST_CHECK_EQUAL(container[0], t)
 ```
 Swap semantics are not supported. 
 
