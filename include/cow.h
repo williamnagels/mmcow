@@ -157,7 +157,7 @@ class Container
 		_size = new_size;
 	}
 
-	void set_value_at_index(std::size_t index, T const& value) { allocate(_size); *(_ptr + index) = value; }
+	void set_value_at_index(std::size_t index, T const& value) { /*allocate(_size);*/ *(_ptr + index) = value; }
 
 	using iterator = Iterator<T, false>;
 	using const_iterator = Iterator<T, true>;
