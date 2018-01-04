@@ -342,4 +342,25 @@ BOOST_AUTO_TEST_CASE(stream_overload)
 	} 
 	while (expected_value <= 149);
 }
+BOOST_AUTO_TEST_CASE(file_size)
+{
+	constexpr std::size_t number_of_elements = 2;
+	uint16_t simple[number_of_elements];
+
+	std::iota(std::begin(simple), std::end(simple), 100); //from 100 to 149
+
+	MMap::Container<uint16_t> container(std::begin(simple), std::end(simple));
+
+	BOOST_CHECK_EQUAL(container.get_size(), number_of_elements);
+	std::ofstream stream;
+	stream.open("dump_function");
+	stream << container;
+	stream.close();
+	std::ifstream ifs("dump_function", std::ifstream::in);
+
+	ifs.seekg(0, std::ios_base::end);
+	std::streampos pos = ifs.tellg();
+
+	BOOST_CHECK_EQUAL(number_of_elements * sizeof(uint16_t), pos);
+}
 BOOST_AUTO_TEST_SUITE_END()
