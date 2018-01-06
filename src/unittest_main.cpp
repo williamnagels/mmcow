@@ -363,4 +363,21 @@ BOOST_AUTO_TEST_CASE(file_size)
 
 	BOOST_CHECK_EQUAL(number_of_elements * sizeof(uint16_t), pos);
 }
+BOOST_AUTO_TEST_CASE(compare_ptr_to_const_ptr)
+{
+	constexpr std::size_t number_of_elements = 2;
+	uint8_t simple[number_of_elements];
+
+	std::iota(std::begin(simple), std::end(simple), 100); //from 100 to 149
+
+	MMap::Container<uint8_t> container(std::begin(simple), std::end(simple));
+
+	uint8_t* t = &(*std::begin(container));
+
+	MMap::Container<uint8_t> const& container2(container);
+
+	uint8_t const* t2 = &(*std::begin(container2));
+
+	BOOST_CHECK_EQUAL(t, t2);
+}
 BOOST_AUTO_TEST_SUITE_END()

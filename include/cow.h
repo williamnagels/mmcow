@@ -24,11 +24,25 @@ namespace
 		{
 
 		}
-
+		operator T&()
+		{
+			return *(_container->_ptr + _index);
+		}
 		operator T const&() const
 		{
 			return *(_container->_ptr + _index);
 		}
+
+		T * operator &()
+		{
+			return _container->_ptr + _index;
+		}
+
+		T const* operator &() const
+		{
+			return _container->_ptr + _index;
+		}
+
 		WrappedValue<T>& operator=(T const& t) &
 		{
 			_container->set_value_at_index(_index, t);
@@ -197,7 +211,7 @@ public:
 	}
 
 	template <typename V>
-	Container(V* const begin_address, V* const end_address) :
+	Container(V* const begin_address, V * const end_address) :
 		Container(reinterpret_cast<T*>(begin_address), reinterpret_cast<T*>(end_address))
 	{
 
