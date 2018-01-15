@@ -380,4 +380,21 @@ BOOST_AUTO_TEST_CASE(compare_ptr_to_const_ptr)
 
 	BOOST_CHECK_EQUAL(t, t2);
 }
+BOOST_AUTO_TEST_CASE(assignment)
+{
+	constexpr std::size_t number_of_elements = 2;
+	uint8_t simple[number_of_elements];
+
+	std::iota(std::begin(simple), std::end(simple), 100); //from 100 to 149
+
+	MMap::Container<uint8_t> container(std::begin(simple), std::end(simple));
+
+	MMap::Container<uint8_t> container2 = container;
+	auto counter = 100;
+	std::for_each(std::cbegin(container2), std::cend(container2), [&](auto const& it)
+	{
+		BOOST_CHECK_EQUAL((uint16_t)counter++, it);
+	});
+
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -216,7 +216,21 @@ public:
 	{
 
 	}
-
+	Container& operator=(Container<T> const& other_container)
+	{
+		if (!other_container._allocated_ptr)
+		{
+			_ptr = other_container._ptr;
+			_size = other_container._size;
+		}
+		else
+		{
+			_ptr = other_container._ptr;
+			_size = other_container._size;
+			allocate(other_container._size);
+		}
+		return *this;
+	}
 	Container(Container<T> const& other_container)
 	{
 		if (!other_container._allocated_ptr)
@@ -230,6 +244,13 @@ public:
 			_size = other_container._size;
 			allocate(other_container._size);
 		}
+	}
+	Container& operator=(Container<T>&& other_container)
+	{
+		_ptr = other_container._ptr;
+		_size = other_container._size;
+		_allocated_ptr = std::move(other_container._allocated_ptr);
+		return *this;
 	}
 	Container(Container<T>&& other_container)
 	{
