@@ -1,6 +1,8 @@
 MMCow (Memory mapped copy-on-write)
 =================================
 Originally required as part of the development of an **elf linker**[^linker], this module  provides copy-on-write access to an address range consisting of N elements of type T.
+
+Compiled on g++ 7.2.0
 ```c++
 	MMap::Container<T> container(std::begin(array), std::end(array));
 ```
