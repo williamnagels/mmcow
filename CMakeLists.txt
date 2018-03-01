@@ -1,8 +1,9 @@
 project (Linker)
 include( CTest )
 set(CMAKE_VERBOSE_MAKEFILE ON)
-cmake_minimum_required (VERSION 3.9.2)
+cmake_minimum_required (VERSION 3.9.1)
 
+set (CMAKE_CXX_STANDARD 17)
 if (WIN32)
 	set (CMAKE_CXX_FLAGS "/std:c++latest /EHsc")
 endif()

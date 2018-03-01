@@ -94,7 +94,7 @@ namespace
 
 		}
 
-		typename iterator& operator=(typename iterator const& Other)
+		iterator& operator=(iterator const& Other)
 		{
 			_index = Other._index;
 			_container = Other._container;
@@ -102,38 +102,38 @@ namespace
 		}
 
 		//pre increment; ++a:
-		typename iterator& operator++()
+		iterator& operator++()
 		{
-			operator=(_container->get_iterator_at_index<iterator>(_index + 1));
+			*this = _container->template get_iterator_at_index<iterator>(_index + 1);
 			return *this;
 		}
 
 		//post increment; a++;
-		typename iterator operator++(int)
+		iterator operator++(int)
 		{
 			auto copy = *this;
-			operator=(_container->get_iterator_at_index<iterator>(_index + 1));
+			*this = _container->template get_iterator_at_index<iterator>(_index + 1);
 			return copy;
 		}
 		//pre decrement; --a:
-		typename iterator& operator--()
+	        iterator& operator--()
 		{
-			operator=(_container->get_iterator_at_index<iterator>(_index - 1));
+			*this=_container->template get_iterator_at_index<iterator>(_index - 1);
 			return *this;
 		}
 		//post decrement; a--;
-		typename iterator operator--(int)
+		iterator operator--(int)
 		{
 			auto copy = *this;
-			operator=(_container->get_iterator_at_index<iterator>(_index - 1));
+			*this = _container->template get_iterator_at_index<iterator>(_index - 1);
 			return copy;
 		}
 
-		bool operator!=(typename iterator const& it)
+		bool operator!=(iterator const& it)
 		{
 			return !(*this == it);
 		}
-		bool operator==(typename iterator const& it)
+		bool operator==(iterator const& it)
 		{
 			return _index == it._index; //check container here?
 		}
