@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <ostream>
+#include <cstring>
 namespace MMap
 {
 	template <typename T>
