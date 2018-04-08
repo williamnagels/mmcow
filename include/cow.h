@@ -176,7 +176,7 @@ class Container
 
 	using iterator = Iterator<T, false>;
 	using const_iterator = Iterator<T, true>;
-	using difference_type = ptrdiff_t;
+	using difference_type = std::ptrdiff_t;
 	using size_type = std::size_t;
 	using value_type = WrappedValue<T>;
 
