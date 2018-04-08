@@ -287,7 +287,9 @@ public:
 
 	const WrappedValue<T> operator[](std::size_t index) const
 	{
-		return WrappedValue<T>(index, const_cast<MMap::Container<T>*>(this));
+
+		auto casted_this = const_cast<MMap::Container<T>*>(this);
+		return (*casted_this)[index];
 	}
 	iterator begin()
 	{
